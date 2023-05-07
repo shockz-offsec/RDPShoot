@@ -2,7 +2,7 @@
   <h1>RDPShoot</h1>
 </div>
 <div align="center">
-  <img src="https://user-images.githubusercontent.com/67438760/236649071-9bc6c030-7ff0-40c9-8dfd-e4e096f0b30a.png" align="center">
+  <img src="https://user-images.githubusercontent.com/67438760/236700753-94eeb285-3e70-4edc-a0cd-eac5826294a8.png" align="center">
 </div>
 
 The purpose of this tool is to capture screenshots of Windows machines with RDP (Remote Desktop Protocol) enabled and NLA (Network Level Authentication) disabled. The tool verifies the availability of the open port and the disabled NLA feature, and proceeds to capture screenshots. It further utilizes Optical Character Recognition (OCR) to transcribe the text in the captured screenshots, and generates a list of users based on the captured images.
