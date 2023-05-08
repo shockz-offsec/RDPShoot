@@ -86,6 +86,7 @@ mkdir -p "${output}"
 echo -e "${blue} Finding hosts with RDP enabled and NLA disabled"
 
 nmap_output=$(nmap -Pn -p 3389 -T4 -n --open --script 'rdp-enum-encryption' $TARGET)
+
 hosts=$(echo "$nmap_output" | python3 -c '
 import sys
 content = sys.stdin.read()
@@ -99,14 +100,28 @@ for slice in slices:
     if nla_deshabilitado:
         ips+=direccion_ip+"\n"
 print(ips)')
-echo "$hosts"
 
 if [ -z "$hosts" ]; then
     echo -e "${red} No active hosts were found with RDP enabled and NLA disabled in ${TARGET}"
     exit 1
 fi
 
-echo -e "${green}IP addresses to be processed that have RDP enabled and NLA disabled:\n$(echo "${hosts}" | sed 's/^/\t/g;s/$/:3389/')"
+#echo -e "${green}IP addresses to be processed that have RDP enabled and NLA disabled:\n$(echo "${hosts}" | sed 's/^/\t/g;s/$/:3389/')"
+echo -e "${green} IP addresses to be processed that have RDP enabled and NLA disabled:"
+
+# Table with IPs
+
+echo "|-----------------------------------|"
+echo "|HOST                 | PORT        |"
+echo "|-----------------------------------|"
+for host in $hosts; do
+printf "|%-21s| %-12s|\n" "$host" "3389"
+done
+echo "|-----------------------------------|"
+
+echo -e "${green} IPs saved in ${output}/ips.txt"
+
+echo "$hosts" > ${output}"/ips.txt"
 
 for h in $hosts; do
 
