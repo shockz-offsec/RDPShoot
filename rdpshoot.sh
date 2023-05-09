@@ -87,26 +87,28 @@ echo -e "${blue} Finding hosts with RDP enabled and NLA disabled"
 
 nmap_output=$(nmap -Pn -p 3389 -T4 -n --open --script 'rdp-enum-encryption' $TARGET)
 
-hosts=$(echo "$nmap_output" | python3 -c '
-import sys
-content = sys.stdin.read()
-slices = content.split("Nmap scan report for ")[1:]
-ips=""
-for slice in slices:
-    direccion_ip = slice.split("\n")[0]
-    nla_habilitado = "CredSSP (NLA): SUCCESS" in slice and "RDSTLS: SUCCESS" in slice
-    nla_deshabilitado = "CredSSP (NLA): SUCCESS" not in slice or \
-                        ("CredSSP (NLA): SUCCESS" in slice and "SSL: SUCCESS" in slice)
-    if nla_deshabilitado:
-        ips+=direccion_ip+"\n"
-print(ips)')
+str=$(echo "$nmap_output" | sed ':a;N;$!ba;s/\n/@@/g' | tr -d '[:space:]')
+substr=($(echo $str | awk -F"Nmapscanreportfor" '{for(i=2;i<=NF;i++) print $i}'))
+
+hosts=()
+
+for i in "${substr[@]}"; do
+  elem=$(echo $i | sed 's/://g')
+  ip_address=$(echo "$elem" | cut -d'@' -f1)
+  if echo "$elem" | grep -q "CredSSP(NLA)SUCCESS"; then
+    if echo "$elem" | grep -q "SSLSUCCESS"; then
+      hosts+=("$ip_address")
+    fi
+  else
+    hosts+=("$ip_address")
+  fi
+done
 
 if [ -z "$hosts" ]; then
     echo -e "${red} No active hosts were found with RDP enabled and NLA disabled in ${TARGET}"
     exit 1
 fi
 
-#echo -e "${green}IP addresses to be processed that have RDP enabled and NLA disabled:\n$(echo "${hosts}" | sed 's/^/\t/g;s/$/:3389/')"
 echo -e "${green} IP addresses to be processed that have RDP enabled and NLA disabled:"
 
 # Table with IPs
@@ -114,9 +116,10 @@ echo -e "${green} IP addresses to be processed that have RDP enabled and NLA dis
 echo "|-----------------------------------|"
 echo "|HOST                 | PORT        |"
 echo "|-----------------------------------|"
-for host in $hosts; do
+for host in "${hosts[@]}"; do
     printf "|%-21s| %-12s|\n" "$host" "3389"
 done
+
 echo "|-----------------------------------|"
 
 echo -e "${green} IPs saved in ${output}/ips.txt"
